@@ -1,24 +1,41 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import "../global.css";
+import { createContext, useContext, useEffect, useState } from "react";
+import { Slot } from "expo-router";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+interface ThemeContextType {
+  isDark: boolean;
+  toggleTheme: () => void;
+}
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+const ThemeContext = createContext<ThemeContextType>({
+  isDark: false,
+  toggleTheme: () => {},
+});
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+export function useTheme() {
+  return useContext(ThemeContext);
+}
+
+export default function Layout() {
+  const [isDark, setIsDark] = useState(false);
+
+  const toggleTheme = () => setIsDark((prev) => !prev);
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.classList.toggle("dark", isDark);
+    }
+  }, [isDark]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+      <div className={isDark ? "dark" : ""}>
+        <div className="flex h-screen w-full flex-col overflow-y-auto bg-slate-50 text-slate-900 transition-colors duration-200 dark:bg-slate-950 dark:text-slate-100">
+          <div className="flex-1 overflow-y-auto">
+            <Slot />
+          </div>
+        </div>
+      </div>
+    </ThemeContext.Provider>
   );
 }
